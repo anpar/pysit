@@ -2,7 +2,8 @@ import math
 
 import numpy as np
 
-__all__ = ['SourceWaveletBase', 'DerivativeGaussianPulse', 'RickerWavelet', 'GaussianPulse', 'WhiteNoiseSource']
+__all__ = ['SourceWaveletBase', 'DerivativeGaussianPulse', 'RickerWavelet',
+           'GaussianPulse', 'WhiteNoiseSource', 'DeltaSource']
 
 _sqrt2 = math.sqrt(2.0)
 
@@ -279,5 +280,54 @@ class WhiteNoiseSource(SourceWaveletBase):
             if nu not in self._f_hat:
                 self._f_hat[nu] = self.variance*(np.random.randn() + np.random.randn()*1j)
             v.append(self._f_hat[nu])
+
+        return v[0] if nus_was_not_array else np.array(v)
+
+class DeltaSource(SourceWaveletBase):
+
+    """ A simple delta in time.
+
+    Notes
+    -----
+
+    Not sure if this will work as I expect it to work.
+    """
+
+    @property
+    def time_source(self):
+        """bool, Indicates if wavelet is defined in time domain."""
+        return True
+
+    @property
+    def frequency_source(self):
+        """bool, Indicates if wavelet is defined in frequency domain."""
+        return True
+
+    def __init__(self, intensity, **kwargs):
+
+        self.intensity = intensity
+
+    def _evaluate_time(self, ts):
+
+        # Vectorize the time list
+        ts_was_not_array, ts = _arrayify(ts)
+
+        v = list()
+        for t in ts:
+            if t == 0:
+                v.append(self.intensity)
+            else:
+                v.append(0)
+
+        return v[0] if ts_was_not_array else np.array(v)
+
+    def _evaluate_frequency(self, nus):
+
+        # Vectorize the frequency list
+        nus_was_not_array, nus = _arrayify(nus)
+
+        v = list()
+        for nu in nus:
+            v.append(self.intensity)
 
         return v[0] if nus_was_not_array else np.array(v)
